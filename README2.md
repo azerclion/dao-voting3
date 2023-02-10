@@ -8,10 +8,13 @@ marp: true
 
 ### 12월 7일 화요일
 
+#### truffle / truffle test / deploy / migration at goerli network
+
 1. 한꺼번에 return값 두개 확인하기 ✔️
 2. deploy (ganache) ✔️
 3. 지갑연결
 4. migrations ✔️
+5. deploy (goerli net) ✔️
 
 ```
    ❯ truffle migrate --network goerli --reset
@@ -23,8 +26,15 @@ marp: true
 
 ### 12월 14일 화요일
 
-1. styled-components
-2. deploy (goerli net)
+#### styled-components
+
+1. 화면 설계
+1. 지갑 연결
+1. 안건 입력
+1. 안건 등록
+1. 안건 검색
+1. 투표 하기
+1. 결과 확인
 
 ---
 
@@ -74,6 +84,8 @@ Summary
 > Total deployments:   1
 > Final cost:          0.003052005480961508 ETH
 ```
+
+---
 
 ---
 
