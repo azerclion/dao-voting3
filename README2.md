@@ -28,8 +28,10 @@ marp: true
 
 #### styled-components
 
-1. 화면 설계
-1. 지갑 연결
+1. 화면 설계 ✔️
+1. 지갑 연결 ✔️
+1. setUser (send, transfer, call)
+1. getUser
 1. 안건 입력
 1. 안건 등록
 1. 안건 검색
@@ -91,6 +93,9 @@ Summary
 
 # NEXT STEP
 
-### 다음 프로젝트는 누가 진행할지?
-
 ### 다음 프로젝트는 무엇을 진행할지?
+
+- nft
+- vote upgrade
+
+### 다음 프로젝트는 누가 진행할지?
