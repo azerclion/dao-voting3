@@ -22,6 +22,13 @@ const WalletButton = styled.button`
   background-color: #48617c;
   cursor: pointer;
 `;
+const TodoList = styled.div`
+  margin-top: 20px;
+`;
+const LoadingBox = styled.div`
+  font-size: 40px;
+  font-weight: 600;
+`;
 
 function App() {
   const [web3, setWeb3] = useState();
@@ -30,8 +37,12 @@ function App() {
   const [Loading, setLoading] = useState(false);
 
   const [userName, setUserName] = useState();
-  const [inputItem, setInputItem] = useState("");
   const [getUserName, setGetUserName] = useState("");
+
+  const [inputItemName, setInputItemName] = useState("");
+  const [inputItem, setInputItem] = useState("");
+  const [searchItemName, setSearchItemName] = useState();
+  const [getPollItem, setGetPollItem] = useState("");
 
   async function walletHandler() {
     try {
@@ -75,22 +86,41 @@ function App() {
       });
   };
   const getUser = async () => {
-    let getName = await contract.methods
+    await contract.methods
       .getUser()
       .call()
-      .then((res) => {
-        setGetUserName(res[0]);
+      .then((userInfo) => {
+        setLoading(false);
+        setGetUserName(userInfo[0]);
+        console.log(userInfo);
+      });
+  };
+  const registerItem = async (name, content) => {
+    await contract.methods
+      .setPoll(name, content)
+      .send({ from: userAccount })
+      .then(() => {
         setLoading(false);
       });
   };
-  const registerItem = async () => {};
+  const getItem = async (name) => {
+    await contract.methods
+      .getPoll(name)
+      .call()
+      .then((ItemName) => {
+        setLoading(false);
+        setGetPollItem(ItemName);
+        console.log(ItemName);
+      });
+  };
 
   return (
     <Container>
-      <div>2. wallet button</div>
+      <LoadingBox>{Loading ? "Loading..." : null}</LoadingBox>
+      <TodoList>2. wallet button</TodoList>
       <WalletButton onClick={walletHandler}>CONNECT WALLET</WalletButton>
       <h5>yourAccount : {userAccount}</h5>
-      <div>3. Set user </div>
+      <TodoList>3. Set user </TodoList>
       <input
         onChange={(e) => {
           setUserName(e.currentTarget.value);
@@ -106,38 +136,59 @@ function App() {
       >
         setuser
       </button>
-      <div>4. Get user</div>
-
+      <TodoList>4. Get user</TodoList>
       <button
-        onClick={(e) => {
+        onClick={() => {
           getUser();
           setLoading(true);
         }}
       >
         getUser
       </button>
-      <div>{getUserName}</div>
-      <div>5. writing a item </div>
+      <div>getUserName : {getUserName}</div>
+      <TodoList>5. writing a item </TodoList>
       <input
         onChange={(e) => {
           setInputItem(e.currentTarget.value);
         }}
         placeholder="type your item"
       ></input>
-      <div>6 . submit button</div>
+      <input
+        onChange={(e) => {
+          setInputItemName(e.currentTarget.value);
+        }}
+        placeholder="type your item name"
+      ></input>
       <button
         onClick={(e) => {
           let item = String(inputItem);
-          registerItem(item);
+          let itemName = String(inputItemName);
+          registerItem(itemName, item);
           setLoading(true);
         }}
       >
         안건등록
       </button>
-      <div>{Loading ? "Loading..." : null}</div>
-      <div>7. search items</div>
-      <div>8. to vote</div>
-      <div>9. to show the result</div>
+
+      <TodoList>7. get items</TodoList>
+      <input
+        onChange={(e) => {
+          setSearchItemName(e.currentTarget.value);
+        }}
+        placeholder="type your item name"
+      ></input>
+      <button
+        onClick={() => {
+          getItem(searchItemName);
+          setLoading(true);
+        }}
+      >
+        안건
+      </button>
+      <div>ItemName : {getPollItem.title}</div>
+      <div>Content : {getPollItem.contents}</div>
+      <TodoList>8. voting</TodoList>
+      <TodoList>9. show the result</TodoList>
     </Container>
   );
 }
