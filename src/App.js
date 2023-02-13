@@ -43,6 +43,7 @@ function App() {
   const [inputItem, setInputItem] = useState("");
   const [searchItemName, setSearchItemName] = useState();
   const [getPollItem, setGetPollItem] = useState("");
+  const [itemNameForVote, setitemNameForVote] = useState("");
 
   async function walletHandler() {
     try {
@@ -86,14 +87,8 @@ function App() {
       });
   };
   const getUser = async () => {
-    await contract.methods
-      .getUser()
-      .call()
-      .then((userInfo) => {
-        setLoading(false);
-        setGetUserName(userInfo[0]);
-        console.log(userInfo);
-      });
+    const data = await contract.methods.getUser().call();
+    console.log(data);
   };
   const registerItem = async (name, content) => {
     await contract.methods
@@ -111,6 +106,14 @@ function App() {
         setLoading(false);
         setGetPollItem(ItemName);
         console.log(ItemName);
+      });
+  };
+  const vote = async (name) => {
+    await contract.methods
+      .vote(name, true)
+      .send({ from: userAccount })
+      .then(() => {
+        setLoading(false);
       });
   };
 
@@ -187,7 +190,23 @@ function App() {
       </button>
       <div>ItemName : {getPollItem.title}</div>
       <div>Content : {getPollItem.contents}</div>
+      <div>agree : {getPollItem.agree}</div>
       <TodoList>8. voting</TodoList>
+      <input
+        onChange={(e) => {
+          setitemNameForVote(e.currentTarget.value);
+        }}
+        placeholder="type your item name"
+      ></input>
+      <button
+        onClick={() => {
+          vote(itemNameForVote);
+          setLoading(true);
+        }}
+      >
+        투표
+      </button>
+
       <TodoList>9. show the result</TodoList>
     </Container>
   );
