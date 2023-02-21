@@ -1,71 +1,102 @@
-import React, { useEffect, useState } from "react";
-import Web3 from "web3";
 import styled from "styled-components";
-
-import voteContract from "./ABI/voting.js";
+import { useState, useRef } from "react";
+import { useEffect } from "react";
+import Web3 from "web3";
+import voteContract from "./ABI/voting";
 
 const Container = styled.div`
   width: 900px;
+  height: 900px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   align-items: center;
+  background-color: lavender;
+  gap: 5px;
 `;
+
 const WalletButton = styled.button`
   width: 150px;
   height: 25px;
-  padding: 4px;
-  border: 2px solid;
+  margin-top: 50px;
+  margin-bottom: 50px;
   border-radius: 20px;
-  color: #baad98;
-  background-color: #48617c;
-  cursor: pointer;
-`;
-const TodoList = styled.div`
-  margin-top: 20px;
-`;
-const LoadingBox = styled.div`
-  font-size: 40px;
-  font-weight: 600;
+  border: 1px solid transparent;
+  background-color: aliceblue;
 `;
 
+const LoadingBox = styled.div`
+  font-size: 35px;
+  font-weight: 800;
+  color: blueviolet;
+`;
+
+const VoteBox = styled.div`
+  padding: 10px;
+  background-color: beige;
+`;
+
+const VoteTitle = styled.div`
+  position: relative;
+  text-align: center;
+  font-weight: bold;
+  border-bottom: 1px solid gray;
+  padding-bottom: 5px;
+  margin-bottom: 3px;
+`;
+
+const pollStatus = ["ongoing", "passed", "failed"];
+
 function App() {
+  // const web3 = new Web3(window.ethereum);
   const [web3, setWeb3] = useState();
   const [userAccount, setUserAccount] = useState();
   const [contract, setContract] = useState();
-  const [Loading, setLoading] = useState(false);
 
+  const [isLoading, setIsLoading] = useState(false);
   const [userName, setUserName] = useState();
-  const [getUserName, setGetUserName] = useState("");
 
-  const [inputItemName, setInputItemName] = useState("");
-  const [inputItem, setInputItem] = useState("");
-  const [searchItemName, setSearchItemName] = useState();
-  const [getPollItem, setGetPollItem] = useState("");
-  const [itemNameForVote, setitemNameForVote] = useState("");
+  const [userData, setUserData] = useState([null, null]);
+  const [pollData, setPollData] = useState({
+    number: null,
+    title: null,
+    contents: null,
+    by: null,
+    agree: null,
+    disag: null,
+    status: null,
+  });
+
+  const nameRef = useRef(null);
+  const contentRef = useRef(null);
+  var radios = document.getElementsByName("poll");
 
   async function walletHandler() {
     try {
       if (typeof window.ethereum !== "undefined") {
-        await window.ethereum.request({ method: "eth_requestAccounts" });
+        await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
         getUserAccountInfo();
         makeContractApi();
       } else {
-        console.log("Please install MetaMask");
+        console.log("please install wallet");
       }
-    } catch (err) {
-      console.log(err.message);
+    } catch (error) {
+      console.log(error.message);
     }
   }
-  async function makeContractApi() {
-    const vote = await voteContract(web3);
-    setContract(vote);
-    console.log("contract", contract);
-  }
+
   async function getUserAccountInfo() {
     const accounts = await web3.eth.getAccounts();
     setUserAccount(accounts[0]);
+  }
+
+  async function makeContractApi() {
+    const vote = await voteContract(web3);
+    setContract(vote);
+    console.log(vote);
   }
 
   useEffect(() => {
@@ -83,47 +114,110 @@ function App() {
       .setUser(userName)
       .send({ from: userAccount })
       .then(() => {
-        setLoading(false);
+        setIsLoading(false);
       });
   };
+
+  const setPoll = async () => {
+    await contract.methods
+      .setPoll(nameRef.current.value, contentRef.current.value)
+      .send({ from: userAccount })
+      .then(() => {
+        setIsLoading(false);
+      });
+
+    // console.log(nameRef.current.value);
+    // console.log(contentRef.current.value);
+  };
+  //https://stackoverflow.com/questions/51847788/msg-sender-does-not-work-inside-a-view-function-why-is-there-a-workaround
   const getUser = async () => {
-    const data = await contract.methods.getUser().call();
-    console.log(data);
-  };
-  const registerItem = async (name, content) => {
     await contract.methods
-      .setPoll(name, content)
-      .send({ from: userAccount })
-      .then(() => {
-        setLoading(false);
+      .getUser()
+      .call({ from: userAccount })
+      .then((rst) => {
+        setUserData(rst);
       });
   };
-  const getItem = async (name) => {
-    await contract.methods
-      .getPoll(name)
-      .call()
-      .then((ItemName) => {
-        setLoading(false);
-        setGetPollItem(ItemName);
-        console.log(ItemName);
-      });
+
+  //안쓰는 함수
+  const settingPollData = () => {
+    // pollData.map((data) => {
+    //   console.log(data);
+    // });
+    // for (const [key, value] of Object.entries(pollData)) {
+    //   console.log(`${key}: ${value}`);
+    // }
+    for (const key in pollData) {
+      if (pollData.hasOwnProperty(key)) {
+        console.log(key + ": " + pollData[key]);
+      }
+    }
   };
-  const vote = async (name) => {
+
+  const getPoll = async () => {
+    // await contract.methods
+    //   .getPoll(nameRef.current.value)
+    //   .call()
+    //   .then((rst) => {
+    //     // setPollData(rst);
+    //     console.log(rst);
+    //     // console.log("-----------");
+    //     // settingPollData();
+
+    //     // const structArray = Object.entries(rst).map(([key, value]) => ({
+    //     //   key,
+    //     //   value,
+    //     // }));
+    //     // console.log(structArray);
+    //     // structArray.forEach(({ key, value }) => {
+    //     //   console.log(`${key}: ${value}`);
+    //     // });
+    //   });
+    const tmp = await contract.methods.getPoll(nameRef.current.value).call();
+    setPollData(tmp);
+    //-> then 함수로 바꾸기
+  };
+
+  const vote = async () => {
+    let value;
+    for (let radio of radios) {
+      if (radio.checked) value = JSON.parse(radio.value);
+    }
+    if (value === undefined || nameRef.current.value === "") {
+      console.log("check input");
+      return;
+    }
+
     await contract.methods
-      .vote(name, true)
+      .vote(nameRef.current.value, value)
       .send({ from: userAccount })
       .then(() => {
-        setLoading(false);
+        setIsLoading(false);
+      });
+  };
+
+  const commitVote = async () => {
+    await contract.methods
+      .finishVote(nameRef.current.value)
+      .send({ from: userAccount })
+      .then(() => {
+        setIsLoading(false);
       });
   };
 
   return (
     <Container>
-      <LoadingBox>{Loading ? "Loading..." : null}</LoadingBox>
-      <TodoList>2. wallet button</TodoList>
-      <WalletButton onClick={walletHandler}>CONNECT WALLET</WalletButton>
-      <h5>yourAccount : {userAccount}</h5>
-      <TodoList>3. Set user </TodoList>
+      <LoadingBox>{isLoading ? "LOADING..." : null}</LoadingBox>
+      <WalletButton onClick={walletHandler}>1. connect wallet</WalletButton>
+      <h3>userAccount : {userAccount}</h3>
+      <button
+        onClick={() => {
+          setUser();
+          setIsLoading(true);
+        }}
+      >
+        2. 유저 설정
+      </button>
       <input
         onChange={(e) => {
           setUserName(e.currentTarget.value);
@@ -131,83 +225,77 @@ function App() {
         placeholder="type your name"
       ></input>
       <button
-        onClick={(e) => {
-          let name = String(inputItem);
-          setUser(name);
-          setLoading(true);
-        }}
-      >
-        setuser
-      </button>
-      <TodoList>4. Get user</TodoList>
-      <button
         onClick={() => {
           getUser();
-          setLoading(true);
         }}
       >
-        getUser
+        3. 유저 정보 가져오기
       </button>
-      <div>getUserName : {getUserName}</div>
-      <TodoList>5. writing a item </TodoList>
-      <input
-        onChange={(e) => {
-          setInputItem(e.currentTarget.value);
-        }}
-        placeholder="type your item"
-      ></input>
-      <input
-        onChange={(e) => {
-          setInputItemName(e.currentTarget.value);
-        }}
-        placeholder="type your item name"
-      ></input>
-      <button
-        onClick={(e) => {
-          let item = String(inputItem);
-          let itemName = String(inputItemName);
-          registerItem(itemName, item);
-          setLoading(true);
-        }}
-      >
-        안건등록
-      </button>
+      <div>
+        이름: {userData[0]} 투표안건수: {userData[1]}
+      </div>
 
-      <TodoList>7. get items</TodoList>
-      <input
-        onChange={(e) => {
-          setSearchItemName(e.currentTarget.value);
+      <button
+        onClick={() => {
+          setPoll();
+          setIsLoading(true);
         }}
-        placeholder="type your item name"
+      >
+        4. 안건 추가하기
+      </button>
+      <input ref={nameRef} type="text" placeholder="type poll's name"></input>
+      <input
+        ref={contentRef}
+        type="text"
+        placeholder="type poll's content"
       ></input>
       <button
         onClick={() => {
-          getItem(searchItemName);
-          setLoading(true);
+          commitVote();
         }}
       >
-        안건
+        5. 투표 종료
       </button>
-      <div>ItemName : {getPollItem.title}</div>
-      <div>Content : {getPollItem.contents}</div>
-      <div>agree : {getPollItem.agree}</div>
-      <TodoList>8. voting</TodoList>
-      <input
-        onChange={(e) => {
-          setitemNameForVote(e.currentTarget.value);
-        }}
-        placeholder="type your item name"
-      ></input>
       <button
         onClick={() => {
-          vote(itemNameForVote);
-          setLoading(true);
+          getPoll();
         }}
       >
-        투표
+        6. 투표 조회
       </button>
-
-      <TodoList>9. show the result</TodoList>
+      <VoteBox>
+        <VoteTitle>투표 내용</VoteTitle>
+        <div>순번: {pollData.number}</div>
+        <div>이름: {pollData.title}</div>
+        <div>내용:{pollData.contents}</div>
+        <div>안건자:{pollData.by}</div>
+        <div>동의수: {pollData.agree}</div>
+        <div>비동의수: {pollData.disag}</div>
+        <div>
+          상태:{" "}
+          {/* {pollData.status === "0"
+            ? "투표중"
+            : pollData.status === "1"
+            ? "통과"
+            : "실패"} */}
+          {pollStatus[pollData.status]}
+        </div>
+      </VoteBox>
+      <div>
+        <button
+          onClick={() => {
+            vote();
+            setIsLoading(true);
+          }}
+        >
+          7. 투표하기
+        </button>
+        <input type="radio" name="poll" value={true} />
+        <label>동의</label>
+        <input type="radio" name="poll" value={false} />
+        <label>비동의</label>
+      </div>
+      <div>8. Result</div>
     </Container>
   );
 }
